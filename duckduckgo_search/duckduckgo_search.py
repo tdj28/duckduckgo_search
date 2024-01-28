@@ -1,6 +1,6 @@
 import asyncio
 import logging
-from typing import Dict, Generator, Optional
+from typing import Dict, Optional, AsyncGenerator
 
 from .duckduckgo_search_async import AsyncDDGS
 
