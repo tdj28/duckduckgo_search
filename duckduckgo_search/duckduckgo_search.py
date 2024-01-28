@@ -6,57 +6,47 @@ from .duckduckgo_search_async import AsyncDDGS
 
 logger = logging.getLogger("duckduckgo_search.DDGS")
 
-
 class DDGS(AsyncDDGS):
     def __init__(self, headers=None, proxies=None, timeout=10):
         super().__init__(headers, proxies, timeout)
-        self._loop = asyncio.get_event_loop()
 
-    def __enter__(self) -> "DDGS":
+    async def __aenter__(self) -> "DDGS":
         return self
+        
+    async def __aexit__(self, exc_type, exc_val, exc_tb) -> None:
+        await self._asession.close()  # Close the async session
 
-    def __exit__(self, exc_type, exc_val, exc_tb) -> None:
-        self._loop.run_until_complete(self.__aexit__(exc_type, exc_val, exc_tb))
 
-    def _iter_over_async(self, ait):
-        """Iterate over an async generator."""
-        ait = ait.__aiter__()
-        get_next = ait.__anext__
-        while True:
-            try:
-                obj = self._loop.run_until_complete(get_next())
-                yield obj
-            except StopAsyncIteration:
-                break
+    async def _iter_over_async(self, ait) -> AsyncGenerator:
+        async for obj in ait:
+            yield obj
 
-    def text(self, *args, **kwargs) -> Generator[Dict[str, Optional[str]], None, None]:
-        async_gen = super().text(*args, **kwargs)
-        return self._iter_over_async(async_gen)
+    async def text(self, *args, **kwargs) -> AsyncGenerator[Dict[str, Optional[str]], None]:
+        return await self._iter_over_async(super().text(*args, **kwargs))
 
-    def images(self, *args, **kwargs) -> Generator[Dict[str, Optional[str]], None, None]:
-        async_gen = super().images(*args, **kwargs)
-        return self._iter_over_async(async_gen)
+    async def images(self, *args, **kwargs) -> AsyncGenerator[Dict[str, Optional[str]], None]:
+        async for item in super().images(*args, **kwargs):
+            yield item
 
-    def videos(self, *args, **kwargs) -> Generator[Dict[str, Optional[str]], None, None]:
-        async_gen = super().videos(*args, **kwargs)
-        return self._iter_over_async(async_gen)
+    async def videos(self, *args, **kwargs) -> AsyncGenerator[Dict[str, Optional[str]], None]:
+        async for item in super().videos(*args, **kwargs):
+            yield item
 
-    def news(self, *args, **kwargs) -> Generator[Dict[str, Optional[str]], None, None]:
-        async_gen = super().news(*args, **kwargs)
-        return self._iter_over_async(async_gen)
+    async def news(self, *args, **kwargs) -> AsyncGenerator[Dict[str, Optional[str]], None]:
+        async for item in super().news(*args, **kwargs):
+            yield item
 
-    def answers(self, *args, **kwargs) -> Generator[Dict[str, Optional[str]], None, None]:
-        async_gen = super().answers(*args, **kwargs)
-        return self._iter_over_async(async_gen)
+    async def answers(self, *args, **kwargs) -> AsyncGenerator[Dict[str, Optional[str]], None]:
+        async for item in super().answers(*args, **kwargs):
+            yield item
 
-    def suggestions(self, *args, **kwargs) -> Generator[Dict[str, Optional[str]], None, None]:
-        async_gen = super().suggestions(*args, **kwargs)
-        return self._iter_over_async(async_gen)
+    async def suggestions(self, *args, **kwargs) -> AsyncGenerator[Dict[str, Optional[str]], None]:
+        async for item in super().suggestions(*args, **kwargs):
+            yield item
 
-    def maps(self, *args, **kwargs) -> Generator[Dict[str, Optional[str]], None, None]:
-        async_gen = super().maps(*args, **kwargs)
-        return self._iter_over_async(async_gen)
+    async def maps(self, *args, **kwargs) -> AsyncGenerator[Dict[str, Optional[str]], None]:
+        async for item in super().maps(*args, **kwargs):
+            yield item
 
-    def translate(self, *args, **kwargs) -> Optional[Dict[str, Optional[str]]]:
-        async_coro = super().translate(*args, **kwargs)
-        return self._loop.run_until_complete(async_coro)
+    async def translate(self, *args, **kwargs) -> Optional[Dict[str, Optional[str]]]:
+        return await super().translate(*args, **kwargs)
